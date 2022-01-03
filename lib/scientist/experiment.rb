@@ -318,4 +318,20 @@ module Scientist::Experiment
     control = observations.detect { |o| o.name == name }
     Scientist::Result.new(self, observations, control)
   end
+
+  private
+
+  # In order to support marshaling, we have to make the procs marshalable. Some
+  # CI providers attempt to marshal Scientist mismatch errors so that they can
+  # be sent out to different places (logs, etc.) The mismatch errors contain
+  # code from the experiment. This code contains procs. These procs prevent the
+  # error from being marshaled. To fix this, we simple exclude the procs from
+  # the data that we marshal.
+  def marshal_dump
+    [@name, @result, @raise_on_mismatches]
+  end
+
+  def marshal_load
+    @name, @result, @raise_on_mismatches = array
+  end
 end
